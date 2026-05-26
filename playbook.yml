@@ -1,0 +1,130 @@
+---
+- name: Sistem Absensi Mahasiswa - Provisioning
+  hosts: localhost
+  connection: local
+  become: true
+  vars:
+    db_host: "192.168.56.11"
+    db_name: db_absensi
+    db_user: absensi_user
+    db_password: "absensi123"
+
+  tasks:
+    # ========== VM DATABASE ==========
+    - name: Setup MySQL Database
+      when: target_node == 'database'
+      block:
+        - name: Install MySQL Server
+          ansible.builtin.apt:
+            name: mysql-server
+            state: present
+            update_cache: true
+
+        - name: Allow remote MySQL connections
+          ansible.builtin.lineinfile:
+            path: /etc/mysql/mysql.conf.d/mysqld.cnf
+            regexp: '^bind-address'
+            line: 'bind-address = 0.0.0.0'
+            backup: true
+
+        - name: Start MySQL
+          ansible.builtin.service:
+            name: mysql
+            state: started
+            enabled: true
+
+        - name: Create database user
+          ansible.builtin.shell: |
+            mysql -e "CREATE DATABASE IF NOT EXISTS {{ db_name }};"
+            mysql -e "CREATE USER IF NOT EXISTS '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}';"
+            mysql -e "ALTER USER '{{ db_user }}'@'%' IDENTIFIED BY '{{ db_password }}';"
+            mysql -e "GRANT ALL PRIVILEGES ON {{ db_name }}.* TO '{{ db_user }}'@'%';"
+            mysql -e "FLUSH PRIVILEGES;"
+          changed_when: false
+
+        - name: Import schema and seed
+          ansible.builtin.shell: |
+            mysql < /vagrant/database/schema.sql
+            mysql < /vagrant/database/seed.sql
+
+        - name: Restart MySQL
+          ansible.builtin.service:
+            name: mysql
+            state: restarted
+
+    # ========== VM BACKEND ==========
+    - name: Setup Node.js Backend
+      when: target_node == 'backend'
+      block:
+        - name: Install Node.js 18
+          ansible.builtin.shell: |
+            curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+            apt-get install -y nodejs
+          args:
+            creates: /usr/bin/node
+
+        - name: Copy backend ke home (hindari symlink error di /vagrant)
+          ansible.builtin.shell: |
+            rm -rf /home/vagrant/absensi-backend
+            cp -r /vagrant/backend /home/vagrant/absensi-backend
+            chown -R vagrant:vagrant /home/vagrant/absensi-backend
+
+        - name: Install npm dependencies
+          ansible.builtin.shell: cd /home/vagrant/absensi-backend && npm install
+          become_user: vagrant
+          args:
+            creates: /home/vagrant/absensi-backend/node_modules/express
+
+        - name: Create systemd service absensi-api
+          ansible.builtin.copy:
+            dest: /etc/systemd/system/absensi-api.service
+            mode: "0644"
+            content: |
+              [Unit]
+              Description=API Absensi Mahasiswa (Node.js Express)
+              After=network.target
+
+              [Service]
+              Type=simple
+              User=vagrant
+              WorkingDirectory=/home/vagrant/absensi-backend
+              Environment=DB_HOST={{ db_host }}
+              Environment=DB_USER={{ db_user }}
+              Environment=DB_PASS={{ db_password }}
+              Environment=DB_NAME={{ db_name }}
+              Environment=PORT=3000
+              ExecStart=/usr/bin/node /home/vagrant/absensi-backend/server.js
+              Restart=always
+              RestartSec=3
+
+              [Install]
+              WantedBy=multi-user.target
+
+        - name: Enable and start API service
+          ansible.builtin.systemd:
+            name: absensi-api
+            enabled: true
+            state: restarted
+            daemon_reload: true
+
+    # ========== VM FRONTEND ==========
+    - name: Setup Nginx Frontend
+      when: target_node == 'frontend'
+      block:
+        - name: Install Nginx
+          ansible.builtin.apt:
+            name: nginx
+            state: present
+            update_cache: true
+
+        - name: Deploy frontend files
+          ansible.builtin.copy:
+            src: /vagrant/frontend/
+            dest: /var/www/html/
+            mode: preserve
+
+        - name: Ensure Nginx running
+          ansible.builtin.service:
+            name: nginx
+            state: started
+            enabled: true
