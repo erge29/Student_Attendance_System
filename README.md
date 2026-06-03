@@ -1,205 +1,131 @@
-# 📋 Sistem Absensi Siswa
-**Tugas Besar Komputasi Awan — Universitas Telkom**  
-Dosen: Dr. Budhi Irawan, S.Si., M.T (B.I.R)
+Deskripsi Aplikasi Absensi Mahasiswa
 
----
+Sistem Informasi Absensi Mahasiswa berbasis Cloud Computing menggunakan arsitektur 3 Virtual Machine. Sistem ini memungkinkan dosen mencatat kehadiran mahasiswa secara digital, melihat rekap per semester, serta admin dapat mengelola data mahasiswa, kelas, dan dosen.
 
-## 📖 Deskripsi Aplikasi
-
-Sistem Informasi Absensi Siswa berbasis **Cloud Computing** menggunakan arsitektur terdistribusi 3 Virtual Machine. Sistem ini memungkinkan guru mencatat kehadiran siswa secara digital, melihat rekap bulanan, serta admin dapat mengelola data siswa, kelas, dan guru.
-
-**Fitur Utama:**
-- Login dengan autentikasi JWT (role: admin & guru)
+Fitur Utama:
+- Login dengan autentikasi JWT (role: admin & dosen)
 - Input absensi harian per kelas (hadir / sakit / izin / alpha)
 - Rekap kehadiran bulanan dengan persentase kehadiran
-- Manajemen data siswa, kelas, dan guru (admin only)
+- Manajemen data mahasiswa, kelas, dan dosen (admin only)
 - Dashboard statistik kehadiran dengan grafik
 
----
+Arsitektur Sistem (3 Virtual Machine)
 
-## 🏗️ Arsitektur Sistem (3 Virtual Machine)
+Private Network
+192.168.56.0/24 (VirtualBox)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Private Network                       │
-│               192.168.56.0/24 (VirtualBox)              │
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  VM-Database │  │  VM-Backend  │  │  VM-Frontend │  │
-│  │192.168.56.11 │  │192.168.56.10 │  │192.168.56.12 │  │
-│  │              │  │              │  │              │  │
-│  │   MySQL 8.0  │◄─│  Node.js 18  │◄─│  Nginx       │  │
-│  │  Port: 3306  │  │  Port: 3000  │  │  Port: 80    │  │
-│  └──────────────┘  └──────────────┘  └──────────────┘  │
-└─────────────────────────────────────────────────────────┘
-         ▲                    ▲                  ▲
-    localhost:              localhost:         localhost:
-      (internal)             3000               8012
-                         (REST API)           (Web App)
-```
+VM-Database
+192.168.56.11
+MySQL 8.0
+Port: 3306
 
----
+VM-Backend
+192.168.56.10
+Node.js 18
+Port: 3000
 
-## 🖥️ Fungsi Masing-Masing VM
+VM-Frontend
+192.168.56.12
+Nginx
+Port: 80
 
-| VM | IP | Software | Fungsi |
-|---|---|---|---|
-| **VM-Database** | 192.168.56.11 | MySQL 8.0 | Menyimpan seluruh data (siswa, guru, kelas, absensi) |
-| **VM-Backend**  | 192.168.56.10 | Node.js 18 + Express | REST API, autentikasi JWT, logika bisnis |
-| **VM-Frontend** | 192.168.56.12 | Nginx | Menyajikan halaman web (HTML/CSS/JS) |
+localhost: (internal)
+localhost: 3000 (REST API)
+localhost: 8012 (Web App)
 
----
+Fungsi Masing-Masing VM
 
-## ⚙️ Teknologi yang Digunakan
+VM: VM-Database
+IP: 192.168.56.11
+Software: MySQL 8.0
+Fungsi: Menyimpan seluruh data (mahasiswa, dosen, kelas, absensi)
 
-| Komponen | Teknologi |
-|---|---|
-| Virtualisasi | VirtualBox + Vagrant |
-| Provisioning | Ansible |
-| OS VM | Ubuntu 22.04 LTS |
-| Database | MySQL 8.0 |
-| Backend | Node.js 18, Express, JWT, bcrypt, mysql2 |
-| Frontend | HTML5, CSS3, Vanilla JavaScript, Chart.js, Nginx |
+VM: VM-Backend
+IP: 192.168.56.10
+Software: Node.js 18 + Express
+Fungsi: REST API, autentikasi JWT, logika bisnis
 
----
+VM: VM-Frontend
+IP: 192.168.56.12
+Software: Nginx
+Fungsi: Menyajikan halaman web (HTML/CSS/JS)
 
-## 📁 Struktur Folder Proyek
+Teknologi yang Digunakan
 
-```
-sistem-absensi-siswa/
-├── Vagrantfile              # Konfigurasi 3 VM (VirtualBox)
-├── playbook.yml             # Ansible provisioning otomatis
-├── README.md                # Dokumentasi ini
-│
-├── database/
-│   ├── schema.sql           # Struktur tabel database
-│   └── seed.sql             # Data awal (kelas, guru, siswa, absensi)
-│
-├── backend/
-│   ├── server.js            # Entry point REST API (Express)
-│   └── package.json         # Dependensi Node.js
-│
-└── frontend/
-    └── index.html           # Single Page Application
-```
+Virtualisasi: VirtualBox + Vagrant
+Provisioning: Ansible
+OS VM: Ubuntu 22.04 LTS
+Database: MySQL 8.0
+Backend: Node.js 18, Express, JWT, bcrypt, mysql2
+Frontend: HTML5, CSS3, Vanilla JavaScript, Chart.js, Nginx
 
----
+Struktur Folder Proyek
 
-## 🚀 Cara Instalasi dan Menjalankan
+sistem-absensi-mahasiswa/
+    Vagrantfile (Konfigurasi 3 VM (VirtualBox))
+    playbook.yml (Ansible provisioning otomatis)
+    README.md (Dokumentasi ini)
 
-### Prasyarat
-- [VirtualBox](https://www.virtualbox.org/) ≥ 6.1
-- [Vagrant](https://www.vagrantup.com/) ≥ 2.3
-- RAM minimal: **4 GB** (masing-masing VM menggunakan 1 GB)
+    database/
+        schema.sql (Struktur tabel database)
+        seed.sql (Data awal (kelas, dosen, mahasiswa, absensi))
 
-### Langkah Instalasi
+    backend/
+        server.js (Entry point REST API (Express))
+        package.json (Dependensi Node.js)
 
-**1. Clone repositori**
-```bash
-git clone https://github.com/<username>/sistem-absensi-siswa.git
-cd sistem-absensi-siswa
-```
+    frontend/
+        index.html (Single Page Application)
 
-**2. Jalankan semua VM sekaligus**
-```bash
+Cara Instalasi dan Menjalankan
+
+Prasyarat
+- VirtualBox lebih dari atau sama dengan 6.1
+- Vagrant lebih dari atau sama dengan 2.3
+- RAM minimal: 4 GB (masing-masing VM menggunakan 1 GB)
+
+Langkah Instalasi
+
+1. Clone repositori
+git clone https://github.com/erge29/Student_Attendance_System.git
+cd Student_Attendance_System
+2. Jalankan VM
 vagrant up
-```
-> Proses pertama kali ±10-20 menit (download box + install dependency)
 
-**3. Akses Aplikasi**
+3. Akses Aplikasi
 
-| Layanan | URL |
-|---|---|
-| 🌐 Web App (Frontend) | http://localhost:8012 |
-| 🔌 REST API (Backend) | http://localhost:3000/api/health |
+Web App (Frontend): http://localhost:8012
+REST API (Backend): http://localhost:3000/api/health
 
----
+Akun Default (untuk Login)
 
-### Menjalankan Per VM (opsional)
+Username: admin, Password: admin123, Role: Admin (akses penuh)
+Username: budi, Password: admin123, Role: Dosen
+Username: siti, Password: admin123, Role: Dosen
+Username: andi, Password: admin123, Role: Dosen
 
-```bash
-# Hanya database
-vagrant up database
+REST API Endpoints
 
-# Hanya backend
-vagrant up backend
+Auth
+POST /api/auth/login -> Login
+GET /api/auth/me -> Info user aktif
 
-# Hanya frontend
-vagrant up frontend
-```
+Absensi
+GET /api/absensi?kelas_id=&tanggal= -> Data absensi per kelas & tanggal
+POST /api/absensi -> Simpan/update absensi
+GET /api/absensi/rekap?kelas_id=&bulan= -> Rekap bulanan
+GET /api/absensi/mahasiswa/:id?bulan= -> Riwayat per mahasiswa
 
-### Perintah Vagrant Berguna
+Data Master (Admin)
+GET/POST /api/mahasiswa -> Daftar / tambah mahasiswa
+GET/PUT/DELETE /api/mahasiswa/:id -> Detail / edit / hapus mahasiswa
+GET/POST/DELETE /api/kelas -> Manajemen kelas/matkul
+GET/POST/DELETE /api/dosen -> Manajemen dosen
+GET /api/dashboard -> Statistik ringkasan
+GET /api/health -> Health check
 
-```bash
-vagrant status          # Cek status VM
-vagrant ssh database    # Masuk ke VM Database
-vagrant ssh backend     # Masuk ke VM Backend
-vagrant ssh frontend    # Masuk ke VM Frontend
-vagrant halt            # Matikan semua VM
-vagrant destroy -f      # Hapus semua VM
-vagrant reload          # Restart semua VM
-```
+Anggota Kelompok
 
----
-
-## 🔑 Akun Default (untuk Login)
-
-| Username | Password | Role |
-|---|---|---|
-| `admin` | `admin123` | Admin (akses penuh) |
-| `budi`  | `admin123` | Guru |
-| `siti`  | `admin123` | Guru |
-| `andi`  | `admin123` | Guru |
-
----
-
-## 🌐 REST API Endpoints
-
-### Auth
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| POST | `/api/auth/login` | Login |
-| GET  | `/api/auth/me`    | Info user aktif |
-
-### Absensi
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| GET  | `/api/absensi?kelas_id=&tanggal=` | Data absensi per kelas & tanggal |
-| POST | `/api/absensi` | Simpan/update absensi |
-| GET  | `/api/absensi/rekap?kelas_id=&bulan=` | Rekap bulanan |
-| GET  | `/api/absensi/siswa/:id?bulan=` | Riwayat per siswa |
-
-### Data Master (Admin)
-| Method | Endpoint | Deskripsi |
-|---|---|---|
-| GET/POST | `/api/siswa` | Daftar / tambah siswa |
-| GET/PUT/DELETE | `/api/siswa/:id` | Detail / edit / hapus siswa |
-| GET/POST/DELETE | `/api/kelas` | Manajemen kelas |
-| GET/POST/DELETE | `/api/guru` | Manajemen guru |
-| GET | `/api/dashboard` | Statistik ringkasan |
-| GET | `/api/health` | Health check |
-
----
-
-## 🔧 Konfigurasi Jaringan VM
-
-```
-VM Database  → 192.168.56.11:3306  (MySQL, dapat diakses dari VM Backend)
-VM Backend   → 192.168.56.10:3000  (API, di-forward ke localhost:3000)
-VM Frontend  → 192.168.56.12:80    (Nginx, di-forward ke localhost:8012)
-```
-
----
-
-## 👥 Anggota Kelompok
-
-| No | Nama | NIM | Bagian |
-|---|---|---|---|
-| 1 | [Nama Anggota 1] | [NIM] | VM Database |
-| 2 | [Nama Anggota 2] | [NIM] | VM Backend  |
-| 3 | [Nama Anggota 3] | [NIM] | VM Frontend |
-
----
-
-## 📜 Lisensi
-MIT License — Tugas Besar Komputasi Awan, Universitas Telkom 2024/2025
+1. Muhammad Rizki Bana Al Husein, 101032400089, Bagian: VM Database
+2. Yoseph Riyanto Gonsalis Wain, 101032400043, Bagian: VM Backend
+3. Ilham Kholid, 101032430033, Bagian: VM Frontend
