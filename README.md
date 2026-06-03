@@ -65,15 +65,12 @@ sistem-absensi-mahasiswa/
     Vagrantfile (Konfigurasi 3 VM (VirtualBox))
     playbook.yml (Ansible provisioning otomatis)
     README.md (Dokumentasi ini)
-
     database/
         schema.sql (Struktur tabel database)
         seed.sql (Data awal (kelas, dosen, mahasiswa, absensi))
-
     backend/
         server.js (Entry point REST API (Express))
         package.json (Dependensi Node.js)
-
     frontend/
         index.html (Single Page Application)
 
