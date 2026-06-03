@@ -1,6 +1,8 @@
 Deskripsi Aplikasi Absensi Mahasiswa
 
-Sistem Informasi Absensi Mahasiswa berbasis Cloud Computing menggunakan arsitektur 3 Virtual Machine. Sistem ini memungkinkan dosen mencatat kehadiran mahasiswa secara digital, melihat rekap per semester, serta admin dapat mengelola data mahasiswa, kelas, dan dosen.
+Sistem Informasi Absensi Mahasiswa berbasis Cloud Computing menggunakan arsitektur 3 Virtual Machine.
+Sistem ini memungkinkan dosen mencatat kehadiran mahasiswa secara digital, 
+melihat rekap per semester, serta admin dapat mengelola data mahasiswa, kelas, dan dosen.
 
 Fitur Utama:
 - Login dengan autentikasi JWT (role: admin & dosen)
